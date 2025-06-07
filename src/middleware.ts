@@ -2,31 +2,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const AUTH_COOKIE_NAME = 'snapExtractAuth';
-const PROTECTED_ROUTES = ['/', '/profile']; 
-const LOGIN_ROUTE = '/login';
-
+// Login functionality has been removed, so middleware is simplified.
+// It can be used for other purposes in the future if needed.
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const isAuthenticated = request.cookies.get(AUTH_COOKIE_NAME)?.value === 'true';
-
-  const isProtectedRoute = PROTECTED_ROUTES.includes(pathname);
-
-  if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL(LOGIN_ROUTE, request.url);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (pathname === LOGIN_ROUTE && isAuthenticated) {
-    const homeUrl = new URL('/', request.url);
-    return NextResponse.redirect(homeUrl);
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    // Apply middleware to all routes except for API, Next.js internals, static files, etc.
     '/((?!api|_next/static|_next/image|favicon.ico|images/|icons/).*)',
   ],
 };

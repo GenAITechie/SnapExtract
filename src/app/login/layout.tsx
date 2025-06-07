@@ -1,11 +1,10 @@
-
-import type {Metadata} from 'next';
+// This layout has been removed as login functionality is no longer required.
 import '../globals.css'; 
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Login - SnapExtract',
-  description: 'Login to SnapExtract to manage your bills.',
+  title: 'SnapExtract',
+  description: 'Login removed.',
 };
 
 export default function LoginLayout({
@@ -22,7 +21,6 @@ export default function LoginLayout({
       </head>
       <body className="font-body antialiased bg-background">
         {children}
-        <Toaster />
       </body>
     </html>
   );

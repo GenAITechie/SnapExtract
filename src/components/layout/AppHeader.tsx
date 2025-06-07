@@ -2,34 +2,24 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ScanLine, Settings, FileText, Menu, LogOut } from 'lucide-react';
+import { ScanLine, Settings, FileText, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const AUTH_COOKIE_NAME = 'snapExtractAuth';
-
 export function AppHeader() {
-  const router = useRouter();
   const pathname = usePathname();
 
   const navItems = [
     { href: '/', label: 'Scan Bill', icon: FileText },
     { href: '/profile', label: 'Profile', icon: Settings },
   ];
-
-  const handleLogout = () => {
-    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-    router.push('/login');
-    router.refresh(); 
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
@@ -56,14 +46,6 @@ export function AppHeader() {
               </Link>
             </Button>
           ))}
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
         </nav>
         
         <div className="md:hidden">
@@ -82,10 +64,6 @@ export function AppHeader() {
                   </Link>
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" /> Logout
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
