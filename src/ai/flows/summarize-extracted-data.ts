@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Summarizes extracted data from a document.
@@ -11,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeExtractedDataInputSchema = z.object({
-  extractedData: z.string().describe('The extracted data from the document.'),
+  extractedData: z.string().describe('The extracted data from the document, typically in JSON format.'),
 });
 export type SummarizeExtractedDataInput = z.infer<typeof SummarizeExtractedDataInputSchema>;
 
@@ -28,7 +29,7 @@ const prompt = ai.definePrompt({
   name: 'summarizeExtractedDataPrompt',
   input: {schema: SummarizeExtractedDataInputSchema},
   output: {schema: SummarizeExtractedDataOutputSchema},
-  prompt: `You are an expert data summarizer. You will be provided with extracted data from a document. Your task is to provide a brief summary of the extracted data, highlighting key information or potential discrepancies, so the user can quickly verify the accuracy of the extraction.
+  prompt: `You are an expert data summarizer. You will be provided with extracted data from one or more bills, likely in JSON format. Your task is to provide a brief, human-readable summary of this data, highlighting key information such as the primary vendor, total amount, and perhaps the number of line items or any notable aspects. The goal is for the user to quickly verify the accuracy of the extraction.
 
 Extracted Data: {{{extractedData}}}`,
 });

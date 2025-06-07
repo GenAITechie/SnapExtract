@@ -64,7 +64,7 @@ export default function MainPage() {
         title: 'Processing Image(s)...',
         description: `AI is extracting data from your bill(s). This may take a moment. Processing ${imageDataUris.length} image(s).`,
       });
-      // Pass an array of data URIs to the AI flow
+      
       const extractionResult = await extractBillData({ billImages: imageDataUris });
       setExtractedData(extractionResult);
       
@@ -142,7 +142,7 @@ export default function MainPage() {
               data={extractedData}
               summary={summary}
               isLoading={isLoading && !extractedData && !summary} 
-              error={null} // Error is handled above this component for the whole card
+              error={null}
             />
           </CardContent>
         </Card>

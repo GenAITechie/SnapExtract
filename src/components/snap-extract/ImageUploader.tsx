@@ -5,7 +5,7 @@ import { ChangeEvent, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UploadCloud, FileText, Loader2, Wand2, Image as ImageIcon } from 'lucide-react';
+import { UploadCloud, FileText, Loader2, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface ImageUploaderProps {
@@ -58,7 +58,7 @@ export function ImageUploader({
                   alt="Selected bill preview" 
                   width={200} 
                   height={200} 
-                  className="mx-auto max-h-48 w-auto object-contain rounded-md" 
+                  className="mx-auto max-h-48 w-auto object-contain rounded-md"
                   data-ai-hint="bill preview"
                 />
               ) : (
@@ -70,7 +70,7 @@ export function ImageUploader({
                       alt={`Preview ${index + 1}`} 
                       width={80} 
                       height={80} 
-                      className="object-contain rounded-md border bg-background shadow-sm" 
+                      className="object-contain rounded-md border bg-background shadow-sm"
                       data-ai-hint="bill preview"
                     />
                   ))}

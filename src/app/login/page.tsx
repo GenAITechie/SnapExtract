@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,35 +22,24 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Removed useEffect that checked for auth on page load, as middleware handles this.
-  // useEffect(() => {
-  //   const isAuthenticated = document.cookie.includes(`${AUTH_COOKIE_NAME}=true`);
-  //   if (isAuthenticated) {
-  //     router.replace('/');
-  //   }
-  // }, [router]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
 
     if (username === HARDCODED_USERNAME && password === HARDCODED_PASSWORD) {
-      // Set a simple cookie for demo purposes
-      // In a real app, this would be a secure, HTTP-only session cookie
       const expires = new Date();
-      expires.setDate(expires.getDate() + 7); // Cookie expires in 7 days
+      expires.setDate(expires.getDate() + 7); 
       document.cookie = `${AUTH_COOKIE_NAME}=true; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
       
       toast({
         title: 'Login Successful',
         description: 'Welcome back!',
       });
-      router.push('/'); // Redirect to the main app page
-      router.refresh(); // Force a refresh of the new page to ensure middleware runs with new cookie
+      router.push('/'); 
+      router.refresh(); 
     } else {
       setError('Invalid username or password.');
       toast({

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ProfileEditor } from '@/components/profile/ProfileEditor';

@@ -14,7 +14,7 @@ interface DataDisplayProps {
   data: ExtractBillDataOutput | null;
   summary: string | null;
   isLoading: boolean;
-  error: string | null;
+  error: string | null; 
 }
 
 const PROFILE_EMAIL_KEY = 'snapExtractProfile_email';
@@ -148,7 +148,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
 
   const escapeCsvCell = (cellData: string | number): string => {
     const stringData = String(cellData);
-    if (stringData.includes(",")) { // Also check for quotes or newlines if necessary
+    if (stringData.includes(",") || stringData.includes('"') || stringData.includes('\n')) {
         return `"${stringData.replace(/"/g, '""')}"`;
     }
     return stringData;
@@ -161,33 +161,32 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
     }
 
     let csvRows: string[] = [];
+    csvRows.push(`"Key","Value"`); // CSV Header for key-value pairs
+    csvRows.push(`${escapeCsvCell("Vendor")},${escapeCsvCell(data.vendor)}`);
+    csvRows.push(`${escapeCsvCell("Date")},${escapeCsvCell(data.date)}`);
+    csvRows.push(`${escapeCsvCell("Total Amount")},${escapeCsvCell(data.amount.toFixed(2))}`);
+    csvRows.push(''); 
 
-    // Main bill details
-    csvRows.push(`Vendor,${escapeCsvCell(data.vendor)}`);
-    csvRows.push(`Date,${escapeCsvCell(data.date)}`);
-    csvRows.push(`Total Amount,${escapeCsvCell(data.amount.toFixed(2))}`);
-    csvRows.push(''); // Blank line for separation
-
-    // Line items
     if (data.lineItems && data.lineItems.length > 0) {
-      csvRows.push('Item Description,Item Amount');
+      csvRows.push(`${escapeCsvCell("Item Description")},${escapeCsvCell("Item Amount")}`); // Line items header
       data.lineItems.forEach(item => {
         csvRows.push(`${escapeCsvCell(item.description)},${escapeCsvCell(item.amount.toFixed(2))}`);
       });
-      csvRows.push(''); // Blank line
+      csvRows.push(''); 
     }
 
-    // Summary
-    csvRows.push(`AI Summary,${summary ? escapeCsvCell(summary) : ''}`);
+    csvRows.push(`${escapeCsvCell("AI Summary")},${summary ? escapeCsvCell(summary) : ''}`);
 
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `bill_data_${data.vendor}_${data.date}.csv`);
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `bill_data_${data.vendor.replace(/\s+/g, '_')}_${data.date}.csv`);
     document.body.appendChild(link); 
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     toast({ title: 'Download Started', description: 'Your CSV file is downloading.' });
   };
@@ -207,7 +206,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
     );
   }
   
-  if (error) {
+  if (error && !data) { // Only show this specific error display if there's no data at all due to error
     return (
       <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-md flex items-start">
         <AlertTriangle className="h-5 w-5 mr-2 mt-0.5" />
@@ -276,7 +275,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       )}
 
       <Separator />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <Button variant="outline" onClick={handleCopyToClipboard} disabled={!data}>
           <ClipboardCopy className="mr-2 h-4 w-4" /> Copy Data
         </Button>
@@ -300,7 +299,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
           <Download className="mr-2 h-4 w-4" /> Download CSV
         </Button>
       </div>
-       {!appEmail && (
+       {!appEmail && data && (
           <p className="text-xs text-muted-foreground text-center mt-2">
             Set your email in Profile to enable Email Data feature.
           </p>
@@ -329,4 +328,3 @@ function DataItem({ icon: Icon, label, value, isCurrency }: DataItemProps) {
     </div>
   );
 }
-

@@ -26,10 +26,9 @@ export function AppHeader() {
   ];
 
   const handleLogout = () => {
-    // Clear the authentication cookie
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
     router.push('/login');
-    router.refresh(); // Force a refresh to ensure middleware re-evaluates
+    router.refresh(); 
   };
 
   return (
@@ -40,7 +39,6 @@ export function AppHeader() {
           <span className="text-2xl font-bold font-headline text-primary">SnapExtract</span>
         </Link>
         
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
           {navItems.map((item) => (
             <Button
@@ -68,7 +66,6 @@ export function AppHeader() {
           </Button>
         </nav>
         
-        {/* Mobile Menu Trigger */}
         <div className="md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

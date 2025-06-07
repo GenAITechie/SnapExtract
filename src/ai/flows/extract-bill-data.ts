@@ -18,6 +18,7 @@ const ExtractBillDataInputSchema = z.object({
     .describe(
       "A photo of a bill, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ))
+    .min(1, "At least one bill image is required.")
     .describe('An array of one or more bill images as data URIs.'),
 });
 export type ExtractBillDataInput = z.infer<typeof ExtractBillDataInputSchema>;
