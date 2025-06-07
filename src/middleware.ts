@@ -11,9 +11,8 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = request.cookies.get(AUTH_COOKIE_NAME)?.value === 'true';
 
   // If trying to access a protected route and not authenticated, redirect to login
-  if (PROTECTED_ROUTES.some(route => pathname === route || (route === '/' && pathname.startsWith('/dashboard'))) && !isAuthenticated) {
+  if (PROTECTED_ROUTES.includes(pathname) && !isAuthenticated) {
     const loginUrl = new URL(LOGIN_ROUTE, request.url);
-    // loginUrl.searchParams.set('from', pathname); // Optional: redirect back after login
     return NextResponse.redirect(loginUrl);
   }
 
