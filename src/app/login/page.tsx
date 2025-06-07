@@ -22,13 +22,13 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Redirect if already logged in (e.g., user navigates to /login manually)
-  useEffect(() => {
-    const isAuthenticated = document.cookie.includes(`${AUTH_COOKIE_NAME}=true`);
-    if (isAuthenticated) {
-      router.replace('/');
-    }
-  }, [router]);
+  // Removed useEffect that checked for auth on page load, as middleware handles this.
+  // useEffect(() => {
+  //   const isAuthenticated = document.cookie.includes(`${AUTH_COOKIE_NAME}=true`);
+  //   if (isAuthenticated) {
+  //     router.replace('/');
+  //   }
+  // }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
