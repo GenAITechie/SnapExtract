@@ -1,10 +1,11 @@
-// This layout has been removed as login functionality is no longer required.
-import '../globals.css'; 
+// This layout is part of the removed login functionality.
+// It should only render children to avoid HTML conflicts if still processed.
 import type { Metadata } from 'next';
+import '../globals.css'; // Keep for potential global styles if ever needed by children
 
 export const metadata: Metadata = {
-  title: 'SnapExtract',
-  description: 'Login removed.',
+  title: 'SnapExtract - Login',
+  description: 'Login process for SnapExtract.',
 };
 
 export default function LoginLayout({
@@ -12,16 +13,8 @@ export default function LoginLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased bg-background">
-        {children}
-      </body>
-    </html>
-  );
+  // A layout should not render <html>, <head>, or <body> tags.
+  // These are handled by the root layout.
+  // It should simply return its children, possibly wrapped in a fragment or a div.
+  return <>{children}</>;
 }
