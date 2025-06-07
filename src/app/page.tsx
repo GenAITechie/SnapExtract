@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,40 +12,44 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Wand2 } from 'lucide-react';
 
 export default function MainPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
+  const [imageDataUris, setImageDataUris] = useState<string[] | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractBillDataOutput | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleImageSelect = async (file: File) => {
-    setSelectedFile(file);
+  const handleImageSelect = async (files: File[]) => {
+    setSelectedFiles(files);
     setExtractedData(null);
     setSummary(null);
     setError(null);
+    setImageDataUris(null); 
+
+    if (files.length === 0) return;
+
     try {
-      const dataUri = await fileToDataUri(file);
-      setImageDataUri(dataUri);
+      const dataUris = await Promise.all(files.map(file => fileToDataUri(file)));
+      setImageDataUris(dataUris);
     } catch (err) {
-      console.error('Error converting file to data URI:', err);
-      setError('Failed to read image file. Please try another image.');
+      console.error('Error converting files to data URIs:', err);
+      setError('Failed to read one or more image files. Please try again.');
       toast({
         variant: 'destructive',
         title: 'Image Read Error',
-        description: 'Could not process the selected image file.',
+        description: 'Could not process the selected image files.',
       });
     }
   };
 
   const handleExtract = async () => {
-    if (!imageDataUri) {
-      setError('Please select an image first.');
+    if (!imageDataUris || imageDataUris.length === 0) {
+      setError('Please select one or more images first.');
       toast({
         variant: 'destructive',
-        title: 'No Image Selected',
-        description: 'Please upload an image file to extract data.',
+        title: 'No Images Selected',
+        description: 'Please upload image file(s) to extract data.',
       });
       return;
     }
@@ -56,10 +61,11 @@ export default function MainPage() {
 
     try {
       toast({
-        title: 'Processing Image...',
-        description: 'AI is extracting data from your bill. This may take a moment.',
+        title: 'Processing Image(s)...',
+        description: `AI is extracting data from your bill(s). This may take a moment. Processing ${imageDataUris.length} image(s).`,
       });
-      const extractionResult = await extractBillData({ billImage: imageDataUri });
+      // Pass an array of data URIs to the AI flow
+      const extractionResult = await extractBillData({ billImages: imageDataUris });
       setExtractedData(extractionResult);
       
       toast({
@@ -84,7 +90,7 @@ export default function MainPage() {
       toast({
         variant: 'destructive',
         title: 'Extraction Failed',
-        description: `AI could not process the bill: ${errorMessage}`,
+        description: `AI could not process the bill(s): ${errorMessage}`,
       });
     } finally {
       setIsLoading(false);
@@ -101,7 +107,7 @@ export default function MainPage() {
               Upload & Extract Bill Data
             </CardTitle>
             <CardDescription>
-              Upload an image of your bill (e.g., .png, .jpg) and let AI extract the details.
+              Upload one or more images of your bill(s) (e.g., .png, .jpg) and let AI extract and consolidate the details.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -109,8 +115,8 @@ export default function MainPage() {
               onImageSelect={handleImageSelect}
               onExtract={handleExtract}
               isExtracting={isLoading}
-              selectedFileName={selectedFile?.name || null}
-              previewDataUri={imageDataUri}
+              selectedFileNames={selectedFiles?.map(f => f.name) || null}
+              previewDataUris={imageDataUris}
             />
           </CardContent>
         </Card>
@@ -119,7 +125,7 @@ export default function MainPage() {
           <CardHeader>
             <CardTitle className="text-2xl font-headline">Extracted Information</CardTitle>
             <CardDescription>
-              Review the data extracted from your bill. You can then export or email it.
+              Review the consolidated data extracted from your bill(s). You can then export or email it.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -135,8 +141,8 @@ export default function MainPage() {
             <DataDisplay
               data={extractedData}
               summary={summary}
-              isLoading={isLoading && !extractedData && !summary}
-              error={null}
+              isLoading={isLoading && !extractedData && !summary} 
+              error={null} // Error is handled above this component for the whole card
             />
           </CardContent>
         </Card>
