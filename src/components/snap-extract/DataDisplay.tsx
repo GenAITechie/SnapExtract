@@ -1,12 +1,12 @@
 
 'use client';
 
-import { type ExtractBillDataOutput } from '@/ai/flows/extract-bill-data';
+import { type ExtractBillDataOutput, type LineItem } from '@/ai/flows/extract-bill-data';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2, Loader2, Download } from 'lucide-react';
+import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2, Loader2, Download, ListOrdered } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { exportToSheets, type ExportToSheetsOutput } from '@/ai/flows/export-to-sheets-flow';
 
@@ -50,6 +50,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
         vendor: data.vendor,
         date: data.date,
         amount: data.amount,
+        lineItems: data.lineItems || [],
         summary: summary || '',
       });
       
@@ -70,7 +71,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
             )}
           </>
         ),
-        duration: 10000, // Longer duration to allow clicking the link or reading message
+        duration: 10000, 
       });
     } catch (err) {
       console.error('Error exporting to Sheets:', err);
@@ -99,12 +100,18 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       return;
     }
 
+    let lineItemsText = '';
+    if (data.lineItems && data.lineItems.length > 0) {
+      lineItemsText = "\nLine Items:\n" + data.lineItems.map(item => `- ${item.description}: $${item.amount.toFixed(2)}`).join("\n");
+    }
+
     const subject = `Extracted Bill Data: ${data.vendor}`;
     const body = `
       Here is the extracted bill information:
       Vendor: ${data.vendor}
       Date: ${data.date}
-      Amount: ${data.amount}
+      Total Amount: $${data.amount.toFixed(2)}
+      ${lineItemsText}
 
       Summary:
       ${summary || 'No summary available.'}
@@ -118,10 +125,15 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
        toast({ variant: 'destructive', title: 'No Data', description: 'No data to copy.' });
       return;
     }
+     let lineItemsText = '';
+    if (data.lineItems && data.lineItems.length > 0) {
+      lineItemsText = "\nLine Items:\n" + data.lineItems.map(item => `- ${item.description}: $${item.amount.toFixed(2)}`).join("\n");
+    }
     const textToCopy = `
       Vendor: ${data.vendor}
       Date: ${data.date}
-      Amount: ${data.amount}
+      Total Amount: $${data.amount.toFixed(2)}
+      ${lineItemsText}
       Summary: ${summary || 'No summary available.'}
     `;
     navigator.clipboard.writeText(textToCopy.trim())
@@ -134,23 +146,41 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       });
   };
 
+  const escapeCsvCell = (cellData: string | number): string => {
+    const stringData = String(cellData);
+    if (stringData.includes(",")) { // Also check for quotes or newlines if necessary
+        return `"${stringData.replace(/"/g, '""')}"`;
+    }
+    return stringData;
+  };
+
   const handleDownloadCsv = () => {
     if (!data) {
       toast({ variant: 'destructive', title: 'No Data', description: 'No data to download.' });
       return;
     }
 
-    const headers = ['Vendor', 'Date', 'Amount', 'Summary'];
-    // Escape commas and quotes in summary
-    const sanitizedSummary = summary ? `"${summary.replace(/"/g, '""')}"` : '""';
-    const rows = [
-      [data.vendor, data.date, data.amount.toString(), sanitizedSummary]
-    ];
+    let csvRows: string[] = [];
 
-    let csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
-      + rows.map(e => e.join(",")).join("\n");
+    // Main bill details
+    csvRows.push(`Vendor,${escapeCsvCell(data.vendor)}`);
+    csvRows.push(`Date,${escapeCsvCell(data.date)}`);
+    csvRows.push(`Total Amount,${escapeCsvCell(data.amount.toFixed(2))}`);
+    csvRows.push(''); // Blank line for separation
 
+    // Line items
+    if (data.lineItems && data.lineItems.length > 0) {
+      csvRows.push('Item Description,Item Amount');
+      data.lineItems.forEach(item => {
+        csvRows.push(`${escapeCsvCell(item.description)},${escapeCsvCell(item.amount.toFixed(2))}`);
+      });
+      csvRows.push(''); // Blank line
+    }
+
+    // Summary
+    csvRows.push(`AI Summary,${summary ? escapeCsvCell(summary) : ''}`);
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -209,8 +239,28 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       <div className="space-y-3">
         <DataItem icon={Building} label="Vendor" value={data.vendor} />
         <DataItem icon={CalendarDays} label="Date" value={data.date} />
-        <DataItem icon={DollarSign} label="Amount" value={data.amount.toString()} isCurrency />
+        <DataItem icon={DollarSign} label="Total Amount" value={data.amount.toFixed(2)} isCurrency />
       </div>
+
+      {data.lineItems && data.lineItems.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h4 className="text-lg font-semibold mb-2 flex items-center">
+              <ListOrdered className="mr-2 h-5 w-5 text-primary" />
+              Line Items
+            </h4>
+            <div className="space-y-2 rounded-md border p-3 max-h-60 overflow-y-auto">
+              {data.lineItems.map((item, index) => (
+                <div key={index} className="flex justify-between items-center text-sm py-1 border-b border-dashed last:border-b-0">
+                  <span className="text-muted-foreground truncate pr-2">{item.description}</span>
+                  <span className="font-medium">${item.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
       
       {summary && (
         <>
