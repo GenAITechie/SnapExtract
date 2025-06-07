@@ -1,9 +1,10 @@
+
 'use client';
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ScanLine, Settings, FileText, Menu } from 'lucide-react';
+import { ScanLine, Settings, FileText, Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const AUTH_COOKIE_NAME = 'snapExtractAuth';
 
 export function AppHeader() {
   const router = useRouter();
@@ -23,6 +25,13 @@ export function AppHeader() {
     { href: '/profile', label: 'Profile', icon: Settings },
   ];
 
+  const handleLogout = () => {
+    // Clear the authentication cookie
+    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    router.push('/login');
+    router.refresh(); // Force a refresh to ensure middleware re-evaluates
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -30,7 +39,9 @@ export function AppHeader() {
           <ScanLine className="h-8 w-8 text-primary" />
           <span className="text-2xl font-bold font-headline text-primary">SnapExtract</span>
         </Link>
-        <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
           {navItems.map((item) => (
             <Button
               key={item.label}
@@ -47,11 +58,17 @@ export function AppHeader() {
               </Link>
             </Button>
           ))}
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </nav>
-        <div className="flex items-center space-x-4">
-          {/* User-specific elements removed */}
-        </div>
-         {/* Mobile Menu Trigger */}
+        
+        {/* Mobile Menu Trigger */}
         <div className="md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -68,6 +85,10 @@ export function AppHeader() {
                   </Link>
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" /> Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
