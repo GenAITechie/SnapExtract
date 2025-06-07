@@ -2,8 +2,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Login functionality has been removed, so middleware is simplified.
-// It can be used for other purposes in the future if needed.
+// This middleware is currently a pass-through, ensuring all routes are accessible.
+// Authentication logic has been removed, and the app is intended for public access.
+// It can be adapted for other purposes (e.g., analytics, A/B testing) in the future if needed.
 export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
