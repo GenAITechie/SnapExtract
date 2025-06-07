@@ -50,6 +50,7 @@ export default function LoginPage() {
         description: 'Welcome back!',
       });
       router.push('/'); // Redirect to the main app page
+      router.refresh(); // Force a refresh of the new page to ensure middleware runs with new cookie
     } else {
       setError('Invalid username or password.');
       toast({
