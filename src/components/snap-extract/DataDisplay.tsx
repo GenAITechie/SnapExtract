@@ -1,3 +1,4 @@
+
 'use client';
 
 import { type ExtractBillDataOutput } from '@/ai/flows/extract-bill-data';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { exportToSheets, type ExportToSheetsOutput } from '@/ai/flows/export-to-sheets-flow';
 
@@ -133,6 +134,34 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       });
   };
 
+  const handleDownloadCsv = () => {
+    if (!data) {
+      toast({ variant: 'destructive', title: 'No Data', description: 'No data to download.' });
+      return;
+    }
+
+    const headers = ['Vendor', 'Date', 'Amount', 'Summary'];
+    // Escape commas and quotes in summary
+    const sanitizedSummary = summary ? `"${summary.replace(/"/g, '""')}"` : '""';
+    const rows = [
+      [data.vendor, data.date, data.amount.toString(), sanitizedSummary]
+    ];
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n" 
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `bill_data_${data.vendor}_${data.date}.csv`);
+    document.body.appendChild(link); 
+    link.click();
+    document.body.removeChild(link);
+
+    toast({ title: 'Download Started', description: 'Your CSV file is downloading.' });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -197,7 +226,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       )}
 
       <Separator />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 pt-2">
         <Button variant="outline" onClick={handleCopyToClipboard} disabled={!data}>
           <ClipboardCopy className="mr-2 h-4 w-4" /> Copy Data
         </Button>
@@ -216,6 +245,9 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
             <FileSpreadsheet className="mr-2 h-4 w-4" />
           )}
           {isExportingToSheets ? 'Exporting...' : 'Export to Sheets'}
+        </Button>
+         <Button variant="outline" onClick={handleDownloadCsv} disabled={!data}>
+          <Download className="mr-2 h-4 w-4" /> Download CSV
         </Button>
       </div>
        {!appEmail && (
@@ -247,3 +279,4 @@ function DataItem({ icon: Icon, label, value, isCurrency }: DataItemProps) {
     </div>
   );
 }
+
