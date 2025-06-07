@@ -1,38 +1,146 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { useState } from 'react';
+import { ImageUploader } from '@/components/snap-extract/ImageUploader';
+import { DataDisplay } from '@/components/snap-extract/DataDisplay';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScanLine } from 'lucide-react';
+import { extractBillData, type ExtractBillDataOutput } from '@/ai/flows/extract-bill-data';
+import { summarizeExtractedData } from '@/ai/flows/summarize-extracted-data';
+import { fileToDataUri } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { AlertTriangle, Wand2 } from 'lucide-react';
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function MainPage() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [extractedData, setExtractedData] = useState<ExtractBillDataOutput | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const user = localStorage.getItem('snapExtractUser');
-    if (user) {
-      router.replace('/dashboard');
+  const handleImageSelect = async (file: File) => {
+    setSelectedFile(file);
+    setExtractedData(null);
+    setSummary(null);
+    setError(null);
+    try {
+      const dataUri = await fileToDataUri(file);
+      setImageDataUri(dataUri);
+    } catch (err) {
+      console.error('Error converting file to data URI:', err);
+      setError('Failed to read image file. Please try another image.');
+      toast({
+        variant: 'destructive',
+        title: 'Image Read Error',
+        description: 'Could not process the selected image file.',
+      });
     }
-  }, [router]);
+  };
+
+  const handleExtract = async () => {
+    if (!imageDataUri) {
+      setError('Please select an image first.');
+      toast({
+        variant: 'destructive',
+        title: 'No Image Selected',
+        description: 'Please upload an image file to extract data.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setExtractedData(null);
+    setSummary(null);
+
+    try {
+      toast({
+        title: 'Processing Image...',
+        description: 'AI is extracting data from your bill. This may take a moment.',
+      });
+      const extractionResult = await extractBillData({ billImage: imageDataUri });
+      setExtractedData(extractionResult);
+      
+      toast({
+        title: 'Data Extracted!',
+        description: 'Now summarizing the results for you.',
+      });
+
+      const summaryResult = await summarizeExtractedData({
+        extractedData: JSON.stringify(extractionResult),
+      });
+      setSummary(summaryResult.summary);
+      toast({
+        title: 'Summary Ready!',
+        description: 'Review the extracted data and summary below.',
+        variant: 'default'
+      });
+
+    } catch (err) {
+      console.error('AI processing error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during AI processing.';
+      setError(`Failed to extract data: ${errorMessage}`);
+      toast({
+        variant: 'destructive',
+        title: 'Extraction Failed',
+        description: `AI could not process the bill: ${errorMessage}`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="items-center text-center">
-          <div className="flex items-center space-x-2 mb-2">
-            <ScanLine className="h-10 w-10 text-primary" />
-            <CardTitle className="text-3xl font-headline">SnapExtract</CardTitle>
-          </div>
-          <CardDescription>Login to extract bill data from images.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-      </Card>
-      <footer className="mt-8 text-sm text-muted-foreground">
-        © {new Date().getFullYear()} SnapExtract. All rights reserved.
-      </footer>
-    </main>
+    <div className="container mx-auto py-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center text-2xl font-headline">
+              <Wand2 className="mr-2 h-6 w-6 text-primary" />
+              Upload & Extract Bill Data
+            </CardTitle>
+            <CardDescription>
+              Upload an image of your bill (e.g., .png, .jpg) and let AI extract the details.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImageUploader
+              onImageSelect={handleImageSelect}
+              onExtract={handleExtract}
+              isExtracting={isLoading}
+              selectedFileName={selectedFile?.name || null}
+              previewDataUri={imageDataUri}
+            />
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-headline">Extracted Information</CardTitle>
+            <CardDescription>
+              Review the data extracted from your bill. You can then export or email it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-md flex items-start">
+                <AlertTriangle className="h-5 w-5 mr-2 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Error</p>
+                  <p className="text-sm">{error}</p>
+                </div>
+              </div>
+            )}
+            <DataDisplay
+              data={extractedData}
+              summary={summary}
+              isLoading={isLoading && !extractedData && !summary}
+              error={null}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

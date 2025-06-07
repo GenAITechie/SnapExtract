@@ -2,7 +2,6 @@
 
 import { type ExtractBillDataOutput } from '@/ai/flows/extract-bill-data';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -16,17 +15,16 @@ interface DataDisplayProps {
   error: string | null;
 }
 
+const PROFILE_EMAIL_KEY = 'snapExtractProfile_email';
+
 export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProps) {
   const { toast } = useToast();
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [appEmail, setAppEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    const user = localStorage.getItem('snapExtractUser');
-    if (user) {
-      const email = localStorage.getItem(`snapExtractProfile_${user}_email`);
-      setCurrentUserEmail(email);
-    }
-  }, [data]); // Re-check email when data changes, as user might have updated profile
+    const email = localStorage.getItem(PROFILE_EMAIL_KEY);
+    setAppEmail(email);
+  }, [data]); // Re-check email when data changes, or on initial load
 
   const handleExportToSheets = () => {
     toast({
@@ -40,7 +38,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       toast({ variant: 'destructive', title: 'No Data', description: 'No data to email.' });
       return;
     }
-    if (!currentUserEmail) {
+    if (!appEmail) {
       toast({
         variant: 'destructive',
         title: 'Email Not Set',
@@ -59,7 +57,7 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
       Summary:
       ${summary || 'No summary available.'}
     `;
-    window.location.href = `mailto:${currentUserEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${appEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     toast({ title: 'Email Client Opened', description: 'Check your email client to send the data.' });
   };
 
@@ -152,14 +150,14 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
         <Button variant="outline" onClick={handleCopyToClipboard}>
           <ClipboardCopy className="mr-2 h-4 w-4" /> Copy Data
         </Button>
-        <Button variant="outline" onClick={handleEmailData} disabled={!currentUserEmail}>
+        <Button variant="outline" onClick={handleEmailData} disabled={!appEmail}>
           <Mail className="mr-2 h-4 w-4" /> Email Data
         </Button>
         <Button variant="accent" onClick={handleExportToSheets} className="bg-accent text-accent-foreground hover:bg-accent/90">
           <FileSpreadsheet className="mr-2 h-4 w-4" /> Export to Sheets
         </Button>
       </div>
-       {!currentUserEmail && (
+       {!appEmail && (
           <p className="text-xs text-muted-foreground text-center mt-2">
             Set your email in Profile to enable Email Data feature.
           </p>
