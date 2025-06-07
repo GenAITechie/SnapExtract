@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { DollarSign, CalendarDays, Building, Info, Mail, FileSpreadsheet, ClipboardCopy, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { exportToSheets, type ExportToSheetsOutput } from '@/ai/flows/export-to-sheets-flow';
 
 interface DataDisplayProps {
   data: ExtractBillDataOutput | null;
@@ -20,17 +21,67 @@ const PROFILE_EMAIL_KEY = 'snapExtractProfile_email';
 export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProps) {
   const { toast } = useToast();
   const [appEmail, setAppEmail] = useState<string | null>(null);
+  const [isExportingToSheets, setIsExportingToSheets] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem(PROFILE_EMAIL_KEY);
     setAppEmail(email);
-  }, [data]); // Re-check email when data changes, or on initial load
+  }, [data]); 
 
-  const handleExportToSheets = () => {
+  const handleExportToSheets = async () => {
+    if (!data) {
+      toast({
+        variant: 'destructive',
+        title: 'No Data',
+        description: 'No data to export to Sheets.',
+      });
+      return;
+    }
+
+    setIsExportingToSheets(true);
     toast({
-      title: 'Feature Coming Soon',
-      description: 'Export to Google Sheets is not yet implemented.',
+      title: 'Exporting to Sheets...',
+      description: 'Please wait while the data is being (simulated) sent.',
     });
+
+    try {
+      const result: ExportToSheetsOutput = await exportToSheets({
+        vendor: data.vendor,
+        date: data.date,
+        amount: data.amount,
+        summary: summary || '',
+      });
+      
+      const isRealUrl = result.sheetUrl !== '#';
+
+      toast({
+        title: 'Export Processed (Simulated)',
+        description: (
+          <>
+            {result.message}
+            {isRealUrl && (
+              <>
+                <br />
+                <a href={result.sheetUrl} target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
+                  Open Target Sheet
+                </a>
+              </>
+            )}
+          </>
+        ),
+        duration: 10000, // Longer duration to allow clicking the link or reading message
+      });
+    } catch (err) {
+      console.error('Error exporting to Sheets:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      toast({
+        variant: 'destructive',
+        title: 'Export Failed',
+        description: `Could not export to Sheets: ${errorMessage}`,
+      });
+    } finally {
+      setIsExportingToSheets(false);
+    }
   };
 
   const handleEmailData = () => {
@@ -147,14 +198,24 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
 
       <Separator />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-        <Button variant="outline" onClick={handleCopyToClipboard}>
+        <Button variant="outline" onClick={handleCopyToClipboard} disabled={!data}>
           <ClipboardCopy className="mr-2 h-4 w-4" /> Copy Data
         </Button>
-        <Button variant="outline" onClick={handleEmailData} disabled={!appEmail}>
+        <Button variant="outline" onClick={handleEmailData} disabled={!appEmail || !data}>
           <Mail className="mr-2 h-4 w-4" /> Email Data
         </Button>
-        <Button variant="accent" onClick={handleExportToSheets} className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <FileSpreadsheet className="mr-2 h-4 w-4" /> Export to Sheets
+        <Button 
+          variant="accent" 
+          onClick={handleExportToSheets} 
+          className="bg-accent text-accent-foreground hover:bg-accent/90"
+          disabled={isExportingToSheets || !data}
+        >
+          {isExportingToSheets ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+          )}
+          {isExportingToSheets ? 'Exporting...' : 'Export to Sheets'}
         </Button>
       </div>
        {!appEmail && (
