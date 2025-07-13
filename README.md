@@ -1,5 +1,7 @@
 # SnapExtract
 
+**Version: 1.0.0**
+
 SnapExtract is a simple, efficient web application that allows users to upload images of bills or receipts, uses AI to extract key information (including line items and summed totals from multiple bills), and offers easy ways to view, summarize, and export this data.
 
 ## Objective
