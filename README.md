@@ -1,36 +1,25 @@
 # SnapExtract
 
-**Version: 1.0.0**
-
-SnapExtract is a simple, efficient web application that allows users to upload images of bills or receipts, uses AI to extract key information (including line items and summed totals from multiple bills), and offers easy ways to view, summarize, and export this data.
+**Version: 2.0.0**
 
 ## Objective
 
-To provide a user-friendly tool for:
-*   Extracting data from bill/receipt images using AI.
-*   Consolidating information from multiple bills.
-*   Offering easy export options for the extracted data.
+To provide a simple, efficient web application that allows users to upload images of bills or receipts, uses AI to extract key information (including line items and summed totals from multiple bills), and offers easy ways to view, summarize, and export this data.
 
 ## Core Features
 
-*   **Multi-Image Upload:**
-    *   Select or drag-and-drop one or more image files (PNG, JPG).
+*   **Multi-Image Upload:** Users can select or drag-and-drop one or more image files (PNG, JPG) representing their bills/receipts.
 *   **AI-Powered Data Extraction:**
     *   Extracts vendor name, bill date, and total amount.
-    *   Consolidates information from multiple images:
-        *   Identifies a primary vendor/date.
-        *   **Sums the total amounts** from all discernible bills.
-    *   Extracts **line items** (description and cost) and aggregates them.
-*   **AI-Generated Summary:**
-    *   Provides a concise, human-readable summary of the extracted bill data.
-*   **Data Presentation:**
-    *   Clearly displays extracted vendor, date, total amount, line items, and AI summary.
+    *   If multiple images are uploaded, it consolidates information, identifying a primary vendor/date and **summing the total amounts**.
+    *   Extracts **line items** (description and cost) from the bill(s) and aggregates them.
+*   **AI-Generated Summary:** Provides a concise, human-readable summary of the extracted bill data.
+*   **Data Presentation:** Clearly displays the extracted vendor, date, total amount, line items, and the AI summary.
 *   **Data Export Options:**
     *   **Download as CSV:** Generates a CSV file with main bill details, line items, and summary.
     *   **Export to Google Sheets (Simulated):** Simulates sending data (including line items) to a Google Sheet and provides guidance for actual integration.
-    *   **Email Data:** Opens the user's default email client with a pre-filled email containing extracted data.
-*   **Profile Email Setup:**
-    *   Users can save an email address in their profile, used as the default for the "Email Data" feature.
+    *   **Email Data:** Opens the user's default email client with a pre-filled email containing the extracted data (vendor, date, total, line items, summary).
+*   **Profile Email Setup:** Users can save an email address in their profile, which is used as the default recipient for the "Email Data" feature.
 
 ## Style & UI Guidelines
 
@@ -38,7 +27,7 @@ To provide a user-friendly tool for:
 *   **Background Color:** Very light blue (`#EBF2FA`)
 *   **Accent Color:** Soft orange (`#DDA07A`) for key export actions.
 *   **Font:** 'Inter' (sans-serif) for modern, readable text.
-*   **Icons:** Minimalist, line-style icons (from Lucide React).
+*   **Icons:** Minimalist, line-style icons (Lucide React).
 *   **Layout:** Clean, efficient, responsive, with clear information hierarchy using cards.
 
 ## Technology Stack

@@ -197,16 +197,19 @@ export function DataDisplay({ data, summary, isLoading, error }: DataDisplayProp
         <Skeleton className="h-8 w-3/4" />
         <Skeleton className="h-6 w-1/2" />
         <Skeleton className="h-6 w-2/3" />
-        <Skeleton className="h-6 w-1/2" />
-        <Separator />
+        <Separator className="my-2" />
+        <Skeleton className="h-6 w-1/4" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+        <Separator className="my-2" />
         <Skeleton className="h-8 w-1/4" />
-        <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
       </div>
     );
   }
   
-  if (error && !data) { // Only show this specific error display if there's no data at all due to error
+  if (error && !data) {
     return (
       <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-md flex items-start">
         <AlertTriangle className="h-5 w-5 mr-2 mt-0.5" />
